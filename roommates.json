@@ -1,0 +1,29 @@
+{
+  "roommates": [
+    {
+      "id": "ad3a9b",
+      "nombre": "Raymond",
+      "apellido": "Smythe"
+    },
+    {
+      "id": "949e2b",
+      "nombre": "پریا",
+      "apellido": "کریمی"
+    },
+    {
+      "id": "67a33a",
+      "nombre": "Maisam",
+      "apellido": "De Cock"
+    },
+    {
+      "id": "52cabd",
+      "nombre": "Alex",
+      "apellido": "Diaz"
+    },
+    {
+      "id": "96efc7",
+      "nombre": "Lucas",
+      "apellido": "Rojas"
+    }
+  ]
+}
