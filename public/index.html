@@ -138,7 +138,7 @@ Articulos de limpieza</textarea>
 					`);
 					$("#roommates").append(`
 									<tr>
-										<td>${r.nombre}</td>
+										<td>${r.nombre} ${r.apellido}</td> //agregué apellido
 										<td class="text-danger">${r.debe ? r.debe : "-"}</td>
 										<td class="text-success">${r.recibe ? r.recibe : "-"}</td>
 									</tr>
@@ -177,6 +177,9 @@ Articulos de limpieza</textarea>
 			const monto = Number($("#monto").val());
 			await fetch("http://localhost:3000/gasto", {
 				method: "POST",
+				headers: { // HEADERS******
+					"Content-Type": "application/json",
+				},
 				body: JSON.stringify({
 					roommate: roommateSelected,
 					descripcion,
@@ -187,9 +190,11 @@ Articulos de limpieza</textarea>
 		};
 
 		const deleteGasto = async (id) => {
-			await fetch("http://localhost:3000/gasto?id=" + id, {
-				method: "DELETE",
-			});
+			if (confirm('¿Deseas eliminar el gasto?')) {
+				await fetch("http://localhost:3000/gasto?id=" + id, {
+					method: "DELETE",
+				});
+			}
 			imprimir();
 		};
 
