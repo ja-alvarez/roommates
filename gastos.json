@@ -1,16 +1,10 @@
 {
   "gastos": [
     {
-      "id": "a1398b",
-      "roommate": "Gabrielle",
+      "id": "2a3548",
+      "roommate": "Claudia",
       "descripcion": "Articulos de limpieza",
       "monto": 15000
-    },
-    {
-      "id": "97402b",
-      "roommate": "David",
-      "descripcion": "Articulos",
-      "monto": 20000
     }
   ]
 }

@@ -40,17 +40,16 @@ app.post('/roommate', async (req, res) => {
     try {
         const getUser = async () => {
             try {
-                const response = await axios.get('https://randomuser.me/api');
-                const usuario = response.data.results[0]
+                const { data } = await axios.get('https://randomuser.me/api');
+                const usuario = data.results[0]
                 const id = uuidv4().slice(0, 6);
-                //log(usuario.name.first, usuario.name.last)
-                const roommate = { id: id, nombre: usuario.name.first, apellido: usuario.name.last };
-                const data = JSON.parse(fs.readFileSync('roommates.json', 'utf8'));
-                if (!Array.isArray(data.roommates)) {
-                    data.roommates = [];
+                const roommate = { id: id, nombre: usuario.name.first, apellido: usuario.name.last, email: usuario.email };
+                const dataRoommate = JSON.parse(fs.readFileSync('roommates.json', 'utf8'));
+                if (!Array.isArray(dataRoommate.roommates)) {
+                    dataRoommate.roommates = [];
                 }
-                data.roommates.push(roommate);
-                fs.writeFileSync('roommates.json', JSON.stringify(data, null, 2));
+                dataRoommate.roommates.push(roommate);
+                fs.writeFileSync('roommates.json', JSON.stringify(dataRoommate, null, 2));
                 log('Nuevo roommate almacenado con éxito.')
                 return roommate;
             } catch (error) {
