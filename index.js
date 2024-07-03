@@ -61,19 +61,7 @@ fs.writeFileSync('roommates.json', JSON.stringify(dataRoommates, null, 4));
     //console.log('Actualización completada:', dataRoommates);
 };
 
-//const responsablePago = dataGastos.gastos[0].roommate
-//console.log('pagó', responsablePago) //persona que pagó
-// filter, excluir a esa persona, al resto= sumar monto al debe, a este usuario sumar monto al recibe
-// 
-//fs.writeFileSync('roommates.json', JSON.stringify(dataRoommate, null, 4));
-// const roommates = ['Khalid', 'Vanessa']
-// const agregarDebe = roommates.filter(rm => rm != responsablePago)
-//   console.log('debe', agregarDebe)
-//  console.log(dataRoommates.roommates[1].nombre)
-//console.log(dataRoommates.roommates.length)
-//  const gasto = (30000 / dataRoommates.roommates.length)
 
-//console.log(gasto)
 
 // Almacenar nuevo roommate usando random user
 app.post('/roommate', async (req, res) => {
