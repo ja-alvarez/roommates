@@ -34,10 +34,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.resolve(__dirname, './public/index.html'));
 });
 
-// ENDPOINTS
-
 const actualizarDebeRecibe = async () => {
-    // usuarios - forEach - 
     const dataGastos = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
     const dataRoommates = JSON.parse(fs.readFileSync('roommates.json', 'utf8'));
     const ultimoGasto = dataGastos.gastos[dataGastos.gastos.length - 1];
@@ -57,12 +54,10 @@ const actualizarDebeRecibe = async () => {
             roommate.debe = 0;
         }
     });
-fs.writeFileSync('roommates.json', JSON.stringify(dataRoommates, null, 4));
-    //console.log('Actualización completada:', dataRoommates);
+    fs.writeFileSync('roommates.json', JSON.stringify(dataRoommates, null, 4));
 };
 
-
-
+// ENDPOINTS
 // Almacenar nuevo roommate usando random user
 app.post('/roommate', async (req, res) => {
     try {
@@ -119,7 +114,6 @@ app.post('/gasto', async (req, res) => {
     try {
         const { roommate, descripcion, monto } = req.body
         const id = uuidv4().slice(0, 6);
-        //console.log(req.body);
         log('** Roommate: ', roommate, 'descripcion: ', descripcion, 'monto: ', monto);
         const gasto = { id, roommate, descripcion, monto };
         const data = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
@@ -131,23 +125,58 @@ app.post('/gasto', async (req, res) => {
         actualizarDebeRecibe();
         log('Nuevo gasto almacenado con éxito.')
         res.status(201).json(gasto)
-        return gasto // acceder a esto en el post /roommate
     } catch (error) {
         res.status(500).json({ message: 'Error al almacenar nuevo gasto.', error: error.message });
     }
 });
 
+//Endpoint pendiente de implementar:
+//Editar datos de un gasto
+app.put('/gasto', (req, res) => {
+    const id = req.query;
+    console.log('************** id', id) // id del gasto!
+});
+
 // Elimina un gasto del historial
-app.delete('/gasto', (req, res) => {
+/* 
+Nota: hay un bug: Al eliminar un gasto, se actualiza el "debe" y "recibe" de los roommates correctamente solo si los roommates son los mismos que había al crearse el gasto. Esto se debe a que, al "revertir" el debe y el recibe, el monto se divide por la cantidad de usuarios actuales, sin garantía de que estos sean los mismos que estaban presentes cuando se creó el gasto originalmente.
+
+Posibles soluciones para mejorar el código podrían ser:
+- crear otro JSON que establezca las relaciones entre cada gasto y los roommates involucrados en ese momento. 
+- Implementar una base de datos para manejar las relaciones y actualizaciones de manera más confiable. Esto permitirá mantener la integridad de los datos y realizar consultas complejas.
+
+El codigo se puede refactorizar, la parte del endpoint que modifica "debe y recibe" es muy similar a la funcion 'actualizarDebeRecibe();'
+*/ 
+app.delete('/gasto', async (req, res) => {
     const { id } = req.query;
     if (id) {
-        const data = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
-        const gastos = data.gastos
+        const dataGastos = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
+        const dataRoommates = JSON.parse(fs.readFileSync('roommates.json', 'utf8')); // **
+        const gastos = dataGastos.gastos
         const index = gastos.findIndex(g => g.id === id)
         if (index !== -1) {
+            const gastoEliminado = gastos[index];
+            const responsablePago = gastoEliminado.roommate;
+            const montoPago = gastoEliminado.monto/dataRoommates.roommates.length;
+            console.log('Responsable pago delete:', responsablePago);
             try {
                 gastos.splice(index, 1)
-                fs.writeFileSync('gastos.json', JSON.stringify(data, null, 4));
+                fs.writeFileSync('gastos.json', JSON.stringify(dataGastos, null, 4));
+                dataRoommates.roommates.forEach(roommate => {
+                    if (roommate.nombre === responsablePago) {
+                        roommate.recibe -= (montoPago * (dataRoommates.roommates.length - 1));
+                    } else {
+                        roommate.debe -= montoPago;
+                    }
+                    if (roommate.debe > roommate.recibe) {
+                        roommate.debe += roommate.recibe;
+                        roommate.recibe = 0;
+                    } else {
+                        roommate.recibe += roommate.debe;
+                        roommate.debe = 0;
+                    }
+                })
+                fs.writeFileSync('roommates.json', JSON.stringify(dataRoommates, null, 4));
                 res.status(200).json({ message: `Gasto eliminado con éxito.` });
             } catch (error) {
                 res.status(500).json({ message: 'Error al eliminar el gasto.' });
