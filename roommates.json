@@ -1,16 +1,20 @@
 {
-  "roommates": [
-    {
-      "id": "5b2c16",
-      "nombre": "Perry",
-      "apellido": "Roberts",
-      "email": "perry.roberts@example.com"
-    },
-    {
-      "id": "eab0c0",
-      "nombre": "Claudia",
-      "apellido": "Green",
-      "email": "claudia.green@example.com"
-    }
-  ]
+    "roommates": [
+        {
+            "id": "13c55e",
+            "nombre": "Khalid",
+            "apellido": "Maudal",
+            "email": "khalid.maudal@example.com",
+            "debe": 0,
+            "recibe": 0
+        },
+        {
+            "id": "68f2bb",
+            "nombre": "Vanessa",
+            "apellido": "Elliott",
+            "email": "vanessa.elliott@example.com",
+            "debe": 0,
+            "recibe": 0
+        }
+    ]
 }

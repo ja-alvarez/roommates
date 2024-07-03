@@ -21,12 +21,12 @@ app.use(express.static('public'));
 
 if (!fs.existsSync('gastos.json')) {
     const gastos = { "gastos": [] };
-    fs.writeFileSync('gastos.json', JSON.stringify(gastos, null, 2), 'utf8');
+    fs.writeFileSync('gastos.json', JSON.stringify(gastos, null, 4), 'utf8');
 }
 
 if (!fs.existsSync('roommates.json')) {
     const roommates = { "roommates": [] };
-    fs.writeFileSync('roommates.json', JSON.stringify(roommates, null, 2), 'utf8');
+    fs.writeFileSync('roommates.json', JSON.stringify(roommates, null, 4), 'utf8');
 }
 
 //RUTA PÁGINA PRINCIPAL
@@ -35,6 +35,46 @@ app.get('/', (req, res) => {
 });
 
 // ENDPOINTS
+
+const actualizarDebeRecibe = async () => {
+    // usuarios - forEach - 
+    const dataGastos = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
+    const dataRoommates = JSON.parse(fs.readFileSync('roommates.json', 'utf8'));
+    const ultimoGasto = dataGastos.gastos[dataGastos.gastos.length - 1];
+    const responsablePago = ultimoGasto.roommate;
+    const montoPorPersona = ultimoGasto.monto / dataRoommates.roommates.length;
+    dataRoommates.roommates.forEach(roommate => {
+        if (roommate.nombre === responsablePago) {
+            roommate.recibe += (montoPorPersona * (dataRoommates.roommates.length - 1));
+        } else {
+            roommate.debe += montoPorPersona;
+        }
+        if (roommate.debe > roommate.recibe) {
+            roommate.debe -= roommate.recibe;
+            roommate.recibe = 0;
+        } else {
+            roommate.recibe -= roommate.debe;
+            roommate.debe = 0;
+        }
+    });
+fs.writeFileSync('roommates.json', JSON.stringify(dataRoommates, null, 4));
+    //console.log('Actualización completada:', dataRoommates);
+};
+
+//const responsablePago = dataGastos.gastos[0].roommate
+//console.log('pagó', responsablePago) //persona que pagó
+// filter, excluir a esa persona, al resto= sumar monto al debe, a este usuario sumar monto al recibe
+// 
+//fs.writeFileSync('roommates.json', JSON.stringify(dataRoommate, null, 4));
+// const roommates = ['Khalid', 'Vanessa']
+// const agregarDebe = roommates.filter(rm => rm != responsablePago)
+//   console.log('debe', agregarDebe)
+//  console.log(dataRoommates.roommates[1].nombre)
+//console.log(dataRoommates.roommates.length)
+//  const gasto = (30000 / dataRoommates.roommates.length)
+
+//console.log(gasto)
+
 // Almacenar nuevo roommate usando random user
 app.post('/roommate', async (req, res) => {
     try {
@@ -43,13 +83,13 @@ app.post('/roommate', async (req, res) => {
                 const { data } = await axios.get('https://randomuser.me/api');
                 const usuario = data.results[0]
                 const id = uuidv4().slice(0, 6);
-                const roommate = { id: id, nombre: usuario.name.first, apellido: usuario.name.last, email: usuario.email };
+                const roommate = { id: id, nombre: usuario.name.first, apellido: usuario.name.last, email: usuario.email, debe: 0, recibe: 0 };
                 const dataRoommate = JSON.parse(fs.readFileSync('roommates.json', 'utf8'));
                 if (!Array.isArray(dataRoommate.roommates)) {
                     dataRoommate.roommates = [];
                 }
                 dataRoommate.roommates.push(roommate);
-                fs.writeFileSync('roommates.json', JSON.stringify(dataRoommate, null, 2));
+                fs.writeFileSync('roommates.json', JSON.stringify(dataRoommate, null, 4));
                 log('Nuevo roommate almacenado con éxito.')
                 return roommate;
             } catch (error) {
@@ -86,11 +126,12 @@ app.get('/gastos', async (req, res) => {
 });
 
 // Recibe el payload con los datos del gasto y almacena en gastos.json
+// HISTORIAL
 app.post('/gasto', async (req, res) => {
     try {
         const { roommate, descripcion, monto } = req.body
         const id = uuidv4().slice(0, 6);
-        console.log(req.body);
+        //console.log(req.body);
         log('** Roommate: ', roommate, 'descripcion: ', descripcion, 'monto: ', monto);
         const gasto = { id, roommate, descripcion, monto };
         const data = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
@@ -98,9 +139,11 @@ app.post('/gasto', async (req, res) => {
             data.gastos = [];
         }
         data.gastos.push(gasto);
-        fs.writeFileSync('gastos.json', JSON.stringify(data, null, 2));
+        fs.writeFileSync('gastos.json', JSON.stringify(data, null, 4));
+        actualizarDebeRecibe();
         log('Nuevo gasto almacenado con éxito.')
         res.status(201).json(gasto)
+        return gasto // acceder a esto en el post /roommate
     } catch (error) {
         res.status(500).json({ message: 'Error al almacenar nuevo gasto.', error: error.message });
     }
@@ -116,13 +159,13 @@ app.delete('/gasto', (req, res) => {
         if (index !== -1) {
             try {
                 gastos.splice(index, 1)
-                fs.writeFileSync('gastos.json', JSON.stringify(data, null, 2));
-                res.status(200).json({message: `Gasto eliminado con éxito.`});
+                fs.writeFileSync('gastos.json', JSON.stringify(data, null, 4));
+                res.status(200).json({ message: `Gasto eliminado con éxito.` });
             } catch (error) {
-                res.status(500).json({message: 'Error al eliminar el gasto.'});
+                res.status(500).json({ message: 'Error al eliminar el gasto.' });
             }
         } else {
-            res.status(400).json({message: 'Gasto no encontrado o no proporcionado.'});
+            res.status(400).json({ message: 'Gasto no encontrado o no proporcionado.' });
         }
     }
 });
