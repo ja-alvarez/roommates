@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import fs from 'fs';
+import nodemailer from 'nodemailer';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -18,6 +19,15 @@ app.use(express.urlencoded({ extended: true }));
 
 //DEJAR PÚBLICA LA CARPETA PUBLIC
 app.use(express.static('public'));
+
+// Crea el transporte de correo
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: ' @gmail.com', //email
+        pass: "", //pass
+    },
+});
 
 if (!fs.existsSync('gastos.json')) {
     const gastos = { "gastos": [] };
@@ -37,13 +47,11 @@ app.get('/', (req, res) => {
 const dividirCuentas = async () => {
     const dataGastos = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
     const dataRoommates = JSON.parse(fs.readFileSync('roommates.json', 'utf8'));
-
     // reinicia deudas y recibos
     dataRoommates.roommates.forEach(roommate => {
         roommate.debe = 0;
         roommate.recibe = 0;
     });
-
     dataGastos.gastos.forEach(gasto => {
         const montoPorPersona = gasto.monto / dataRoommates.roommates.length;
         dataRoommates.roommates.forEach(roommate => {
@@ -54,7 +62,6 @@ const dividirCuentas = async () => {
             }
         });
     });
-
     dataRoommates.roommates.forEach(roommate => {
         if (roommate.debe > roommate.recibe) {
             roommate.debe -= roommate.recibe;
@@ -64,7 +71,6 @@ const dividirCuentas = async () => {
             roommate.debe = 0;
         }
     });
-
     fs.writeFileSync('roommates.json', JSON.stringify(dataRoommates, null, 4));
 };
 
@@ -124,7 +130,6 @@ app.post('/gasto', async (req, res) => {
     try {
         const { roommate, descripcion, monto } = req.body
         const id = uuidv4().slice(0, 6);
-        log('** Roommate: ', roommate, 'descripcion: ', descripcion, 'monto: ', monto);
         const gasto = { id, roommate, descripcion, monto };
         const data = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
         if (!Array.isArray(data.gastos)) {
@@ -133,6 +138,27 @@ app.post('/gasto', async (req, res) => {
         data.gastos.push(gasto);
         fs.writeFileSync('gastos.json', JSON.stringify(data, null, 4));
         dividirCuentas();
+
+        // Define las opciones del correo electrónico
+        const mailOptions = {
+            from: '@gmail.com', // 
+            to: '@gmail.com', //Corregir
+            subject: 'Nuevo gasto',
+            text: `Se ha registrado un nuevo gasto:\nID: ${id}\nRoommate: ${roommate}\nDescripción: ${descripcion}\nMonto: ${monto}`
+        };
+        //log('***************', mailOptions.text)
+        await new Promise((resolve, reject) => {
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    reject(error);
+                    log('ERROR ****************',error)
+                } else {
+                    resolve(info);
+                    log('INFO ****************',info.response)
+                }
+            });
+        });
+        console.log('Correo electrónico enviado correctamente.');
         log('Nuevo gasto almacenado con éxito.')
         res.status(201).json(gasto)
     } catch (error) {
@@ -162,7 +188,6 @@ app.put('/gasto', async (req, res) => {
         if (descripcion !== undefined) gasto.descripcion = descripcion;
         if (roommate !== undefined) gasto.roommate = roommate;
         fs.writeFileSync('gastos.json', JSON.stringify({ gastos }, null, 4));
-
         const montoPorPersonaAnterior = montoAnterior / dataRoommates.roommates.length;
         const montoPorPersonaNuevo = gasto.monto / dataRoommates.roommates.length;
         dataRoommates.roommates.forEach(roommateItem => {

@@ -6,14 +6,14 @@
             "apellido": "Anderson",
             "email": "clara.anderson@example.com",
             "debe": 0,
-            "recibe": 0
+            "recibe": 50000
         },
         {
             "id": "441feb",
             "nombre": "Ethan",
             "apellido": "Brenne",
             "email": "ethan.brenne@example.com",
-            "debe": 0,
+            "debe": 25000,
             "recibe": 0
         },
         {
@@ -21,7 +21,7 @@
             "nombre": "تارا",
             "apellido": "حسینی",
             "email": "tr.hsyny@example.com",
-            "debe": 0,
+            "debe": 25000,
             "recibe": 0
         }
     ]
