@@ -1,34 +1,3 @@
 {
-    "gastos": [
-        {
-            "id": "4e1434",
-            "roommate": "Clara",
-            "descripcion": "Articulos de limpieza",
-            "monto": 15000
-        },
-        {
-            "id": "ddda2e",
-            "roommate": "Clara",
-            "descripcion": "Articulos de limpieza",
-            "monto": 15000
-        },
-        {
-            "id": "60a2a7",
-            "roommate": "Clara",
-            "descripcion": "Articulos de limpieza",
-            "monto": 15000
-        },
-        {
-            "id": "ddd8f5",
-            "roommate": "Clara",
-            "descripcion": "Articulos de limpieza",
-            "monto": 15000
-        },
-        {
-            "id": "1ad45a",
-            "roommate": "Clara",
-            "descripcion": "Articulos de limpieza",
-            "monto": 15000
-        }
-    ]
+    "gastos": []
 }

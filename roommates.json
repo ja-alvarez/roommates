@@ -6,22 +6,22 @@
             "apellido": "Anderson",
             "email": "clara.anderson@example.com",
             "debe": 0,
-            "recibe": 50000
+            "recibe": 0
         },
         {
             "id": "441feb",
             "nombre": "Ethan",
             "apellido": "Brenne",
             "email": "ethan.brenne@example.com",
-            "debe": 25000,
+            "debe": 0,
             "recibe": 0
         },
         {
             "id": "c735f0",
-            "nombre": "تارا",
-            "apellido": "حسینی",
-            "email": "tr.hsyny@example.com",
-            "debe": 25000,
+            "nombre": "Jose",
+            "apellido": "Perez",
+            "email": "jose.perez@example.com",
+            "debe": 0,
             "recibe": 0
         }
     ]

@@ -14,7 +14,7 @@ const port = 3000;
 
 // MIDDLEWARES GENERALES
 app.use(express.json());
-app.use(morgan("tiny"));
+app.use(morgan('tiny'));
 app.use(express.urlencoded({ extended: true }));
 
 //DEJAR PÚBLICA LA CARPETA PUBLIC
@@ -24,18 +24,18 @@ app.use(express.static('public'));
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: ' @gmail.com', //email
-        pass: "", //pass
+        user: '', // Falta ingresar email y contraseñas válidos
+        pass: '', //pass
     },
 });
 
 if (!fs.existsSync('gastos.json')) {
-    const gastos = { "gastos": [] };
+    const gastos = { 'gastos': [] };
     fs.writeFileSync('gastos.json', JSON.stringify(gastos, null, 4), 'utf8');
 }
 
 if (!fs.existsSync('roommates.json')) {
-    const roommates = { "roommates": [] };
+    const roommates = { 'roommates': [] };
     fs.writeFileSync('roommates.json', JSON.stringify(roommates, null, 4), 'utf8');
 }
 
@@ -129,37 +129,37 @@ app.get('/gastos', async (req, res) => {
 app.post('/gasto', async (req, res) => {
     try {
         const { roommate, descripcion, monto } = req.body
+        if (!roommate || !descripcion || !monto) {
+            return res.status(400).json({ message: 'Datos faltantes en la solicitud.' });
+        }
         const id = uuidv4().slice(0, 6);
         const gasto = { id, roommate, descripcion, monto };
-        const data = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));
+        const data = JSON.parse(fs.readFileSync('gastos.json', 'utf8'));  //borré await
         if (!Array.isArray(data.gastos)) {
             data.gastos = [];
         }
         data.gastos.push(gasto);
         fs.writeFileSync('gastos.json', JSON.stringify(data, null, 4));
-        dividirCuentas();
-
+        await dividirCuentas();
         // Define las opciones del correo electrónico
+        const dataRoommates = JSON.parse(fs.readFileSync('roommates.json', 'utf8')); //await
+        const emails = dataRoommates.roommates.map(roommate => roommate.email);
+        const emailList = emails.join(', ');
         const mailOptions = {
-            from: '@gmail.com', // 
-            to: '@gmail.com', //Corregir
+            from: 'pruebasjsdev@gmail.com',
+            to: emailList, //Corregir
             subject: 'Nuevo gasto',
             text: `Se ha registrado un nuevo gasto:\nID: ${id}\nRoommate: ${roommate}\nDescripción: ${descripcion}\nMonto: ${monto}`
         };
-        //log('***************', mailOptions.text)
-        await new Promise((resolve, reject) => {
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    reject(error);
-                    log('ERROR ****************',error)
-                } else {
-                    resolve(info);
-                    log('INFO ****************',info.response)
-                }
-            });
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log('Error al enviar el correo:', error);
+                res.status(500).json({ message: 'Error al enviar el correo electrónico', error: error.message });
+            } else {
+                console.log('Correo electrónico enviado: ' + info.response);
+                res.status(200).json({ message: 'Correo electrónico enviado correctamente.' });
+            }
         });
-        console.log('Correo electrónico enviado correctamente.');
-        log('Nuevo gasto almacenado con éxito.')
         res.status(201).json(gasto)
     } catch (error) {
         res.status(500).json({ message: 'Error al almacenar nuevo gasto.', error: error.message });
@@ -262,7 +262,6 @@ app.delete('/gasto', async (req, res) => {
         res.status(400).json({ message: 'ID del gasto no proporcionado.' });
     }
 });
-
 
 app.all('*', (req, res) => {
     res.send('Página no encontrada.')
